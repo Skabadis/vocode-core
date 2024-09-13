@@ -1,3 +1,6 @@
+import requests # Added by Sandra.ai
+from requests.auth import HTTPBasicAuth # Added by Sandra.ai
+
 import base64
 import json
 import os
@@ -117,7 +120,37 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
             if data["event"] == "start":
                 logger.debug(f"Media WS: Received event '{data['event']}': {message}")
                 self.output_device.stream_sid = data["start"]["streamSid"]
+
+                # Extract the Call SID from the Twilio start event data
+                call_sid = data['start']['callSid']
+                auth_token = self.twilio_config.auth_token
+                account_sid = self.twilio_config.account_sid
+
+                # Send the call SID in the logs:
+                logger.info(f"Le call SID twilio de cet appel est {call_sid}")
+
+                # Start recording the call without a RecordingStatusCallback URL
+                record_url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls/{call_sid}/Recordings.json"
+                response = requests.post(record_url, auth=HTTPBasicAuth(account_sid, auth_token))
+
+                if response.status_code == 201:
+                    logger.info("Recording started successfully")
+                else:
+                    logger.error(f"Failed to start recording: {response.status_code} - {response.text}")
+                
                 break
+
+    # async def _wait_for_twilio_start(self, ws: WebSocket):
+    #     assert isinstance(self.output_device, TwilioOutputDevice)
+    #     while True:
+    #         message = await ws.receive_text()
+    #         if not message:
+    #             continue
+    #         data = json.loads(message)
+    #         if data["event"] == "start":
+    #             logger.debug(f"Media WS: Received event '{data['event']}': {message}")
+    #             self.output_device.stream_sid = data["start"]["streamSid"]
+    #             break
 
     async def _handle_ws_message(self, message) -> Optional[TwilioPhoneConversationWebsocketAction]:
         if message is None:
