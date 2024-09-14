@@ -1,5 +1,7 @@
 import requests # Added by Sandra.ai
 from requests.auth import HTTPBasicAuth # Added by Sandra.ai
+from twilio.rest import Client
+
 
 import base64
 import json
@@ -111,19 +113,7 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
         await self.terminate()
 
     async def _wait_for_twilio_start(self, ws: WebSocket):
-        assert isinstance(self.output_device, TwilioOutputDevice)
-
-        # async def start_recording(region_url):
-        #     record_url = f"{region_url}/2010-04-01/Accounts/{account_sid}/Calls/{call_sid}/Recordings.json"
-        #     response = requests.post(record_url, auth=HTTPBasicAuth(account_sid, auth_token))
-            
-        #     if response.status_code == 201:
-        #         logger.info(f"Recording started successfully in {region_url}")
-        #         return True
-        #     else:
-        #         logger.warning(f"Failed to start recording in {region_url}: {response.status_code} - {response.text}")
-        #         return False
-        
+        assert isinstance(self.output_device, TwilioOutputDevice)        
         while True:
             message = await ws.receive_text()
             if not message:
@@ -138,27 +128,26 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
                 auth_token = self.twilio_config.auth_token
                 account_sid = self.twilio_config.account_sid
 
+                try:
+                    # Initialize Twilio Client
+                    client = Client(account_sid, auth_token)
+                    
+                    # Start recording the call
+                    call = client.calls(call_sid).recordings.create()
+                    
+                    logger.info(f"Recording SID: {call.sid}")
+                except Exception as e:
+                    logger.error(f"An error occurred while starting the recording: {e}")
                 # Send the call SID in the logs:
                 logger.info(f"Le call SID twilio de cet appel est {call_sid}")
 
-                record_url = f"https://ie1.api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls/{call_sid}/Recordings.json"
-                response = requests.post(record_url, auth=HTTPBasicAuth(account_sid, auth_token))
-                # # # Try recording with Ireland region
-                # # if await start_recording("https://ie1.api.twilio.com"):
-                # #     break
-                
-                # # # If failed, try recording with US region
-                # # logger.info("Tried recording with Ireland region, did not work. Trying with US region...")
-                # # if await start_recording("https://api.twilio.com"):
-                # #     break
-                
-                # # If both attempts fail
-                # logger.error("Failed to start recording in both Ireland and US regions.")
+                # record_url = f"https://ie1.api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls/{call_sid}/Recordings.json"
+                # response = requests.post(record_url, auth=HTTPBasicAuth(account_sid, auth_token))
 
-                if response.status_code == 201:
-                    logger.info("Recording started successfully")
-                else:
-                    logger.error(f"Failed to start recording: {response.status_code} - {response.text}")
+                # if response.status_code == 201:
+                #     logger.info("Recording started successfully")
+                # else:
+                #     logger.error(f"Failed to start recording: {response.status_code} - {response.text}")
                 break
 
     # async def _wait_for_twilio_start(self, ws: WebSocket):
