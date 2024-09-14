@@ -31,6 +31,7 @@ class TwilioClient(AbstractTelephonyClient):
         self.auth = aiohttp.BasicAuth(
             login=self.twilio_config.account_sid,
             password=self.twilio_config.auth_token,
+            region='ie1'
         )
         super().__init__(base_url=base_url)
 
