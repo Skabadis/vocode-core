@@ -120,7 +120,7 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
             if data["event"] == "start":
                 logger.debug(f"Media WS: Received event '{data['event']}': {message}")
                 self.output_device.stream_sid = data["start"]["streamSid"]
-                logger.info(f"DATA OBJECT: {data}")
+                logger.info(f"DATA OBJECT: {json.dumps(data, indent=2)}")
                 # Extract the Call SID from the Twilio start event data
                 call_sid = data['start']['callSid']
                 auth_token = self.twilio_config.auth_token
