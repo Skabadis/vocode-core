@@ -131,7 +131,7 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
                     client = Client(account_sid, 
                                     auth_token, 
                                     region='ie1', 
-                                    edge='dublin')
+                                    edge='roaming')
                     
                     # Start recording the call
                     call = client.calls(call_sid).recordings.create()
