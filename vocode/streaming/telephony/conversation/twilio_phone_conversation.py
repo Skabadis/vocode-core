@@ -1,7 +1,4 @@
-import requests # Added by Sandra.ai
-from requests.auth import HTTPBasicAuth # Added by Sandra.ai
-from twilio.rest import Client
-
+from twilio.rest import Client # Added by Sandra.ai
 
 import base64
 import json
@@ -113,7 +110,7 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
         await self.terminate()
 
     async def _wait_for_twilio_start(self, ws: WebSocket):
-        assert isinstance(self.output_device, TwilioOutputDevice)        
+        assert isinstance(self.output_device, TwilioOutputDevice)
         while True:
             message = await ws.receive_text()
             if not message:
