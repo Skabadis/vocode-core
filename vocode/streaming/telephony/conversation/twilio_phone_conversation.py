@@ -122,7 +122,8 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
             if data["event"] == "start":
                 logger.debug(f"Media WS: Received event '{data['event']}': {message}")
                 self.output_device.stream_sid = data["start"]["streamSid"]
-                logger.info(f"DATA OBJECT: {json.dumps(data, indent=2)}")
+                logger.info(f"Twilio data object websocket awaiting receive text: {json.dumps(data, indent=2)}")
+                
                 # Extract the Call SID from the Twilio start event data
                 call_sid = data['start']['callSid']
                 auth_token = self.twilio_config.auth_token
@@ -130,37 +131,20 @@ class TwilioPhoneConversation(AbstractPhoneConversation[TwilioOutputDevice]):
 
                 try:
                     # Initialize Twilio Client
-                    client = Client(account_sid, auth_token, region='ie1')
+                    client = Client(account_sid, 
+                                    auth_token, 
+                                    region='ie1', 
+                                    edge='dublin')
                     
                     # Start recording the call
                     call = client.calls(call_sid).recordings.create()
                     
-                    logger.info(f"Recording SID: {call.sid}")
+                    logger.info(f"Recording started for call SID: {call.sid}")
                 except Exception as e:
                     logger.error(f"An error occurred while starting the recording: {e}")
                 # Send the call SID in the logs:
-                logger.info(f"Le call SID twilio de cet appel est {call_sid}")
-
-                # record_url = f"https://ie1.api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls/{call_sid}/Recordings.json"
-                # response = requests.post(record_url, auth=HTTPBasicAuth(account_sid, auth_token))
-
-                # if response.status_code == 201:
-                #     logger.info("Recording started successfully")
-                # else:
-                #     logger.error(f"Failed to start recording: {response.status_code} - {response.text}")
+                logger.info(f"Call SID: {call_sid}")
                 break
-
-    # async def _wait_for_twilio_start(self, ws: WebSocket):
-    #     assert isinstance(self.output_device, TwilioOutputDevice)
-    #     while True:
-    #         message = await ws.receive_text()
-    #         if not message:
-    #             continue
-    #         data = json.loads(message)
-    #         if data["event"] == "start":
-    #             logger.debug(f"Media WS: Received event '{data['event']}': {message}")
-    #             self.output_device.stream_sid = data["start"]["streamSid"]
-    #             break
 
     async def _handle_ws_message(self, message) -> Optional[TwilioPhoneConversationWebsocketAction]:
         if message is None:
